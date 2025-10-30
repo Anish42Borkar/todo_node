@@ -1,10 +1,26 @@
 import express from "express";
+import dotenv from "dotenv";
+import path, { dirname } from "path";
+import { fileURLToPath } from "url";
+import authRoute from "./routes/authRoutes.ts";
+import todosRouter from "./routes/todoRoutes.ts";
+dotenv.config();
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, "../public")));
+app.use("/auth", authRoute);
+app.use("/todo", todosRouter);
+console.log(path.join(__dirname, "public", "index.html"));
 
 app.get("/", (req, res) => {
-  res.send("Hello from TypeScript + Node!");
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 app.listen(PORT, () => {
