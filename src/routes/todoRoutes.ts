@@ -1,11 +1,12 @@
 import express from "express";
-import type { Request, Response } from "express";
-
 import db from "../db.ts";
 
 const router = express.Router();
-
-router.get("/", (req, res) => {});
+router.get("/", (req, res) => {
+  const sql = db.prepare("SELECT * FROM todos where username = ?");
+  const todos = sql.all(req?.user?.id!);
+  res.status(200).json(todos);
+});
 
 router.post("/", (req, res) => {});
 

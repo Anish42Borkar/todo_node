@@ -4,6 +4,7 @@ import path, { dirname } from "path";
 import { fileURLToPath } from "url";
 import authRoute from "./routes/authRoutes.ts";
 import todosRouter from "./routes/todoRoutes.ts";
+import authMiddleware from "./middleware/authmiddleware.ts";
 dotenv.config();
 
 const app = express();
@@ -16,7 +17,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "../public")));
 app.use("/auth", authRoute);
-app.use("/todo", todosRouter);
+app.use("/todos", authMiddleware, todosRouter);
 console.log(path.join(__dirname, "public", "index.html"));
 
 app.get("/", (req, res) => {
