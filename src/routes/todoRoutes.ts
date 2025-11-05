@@ -7,7 +7,6 @@ const router = express.Router();
 router.get("/", (req, res) => {
   try {
     const sql = db.prepare("SELECT * FROM todos where user_id = ?");
-    console.log(req?.user);
     const todos = sql.all(req?.user?.id!);
     res.status(200).json(todos);
   } catch (error) {
@@ -22,13 +21,32 @@ router.post("/", (req: Request<{}, {}, { task: string }>, res) => {
     const todos = sql.run(req?.user?.id, task);
     res.status(200).json(todos);
   } catch (error) {
-    console.log(error);
     res.status(500).json({ message: "server error" });
   }
 });
 
-router.put("/:id", (req, res) => {});
+router.put("/:id", (req, res) => {
+  try {
+    const { completed } = req.body;
+    const id = req.params.id;
+    const sql = db.prepare("UPDATE todos SET completed = ? WHERE id = ?");
+    sql.run(completed, id);
+    res.status(202).json({ message: "Updated Successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Server Error" });
+  }
+});
 
-router.delete("/:id", (req, res) => {});
+router.delete("/:id", (req, res) => {
+  try {
+    const id = req.params.id;
+
+    const sql = db.prepare("DELETE FROM todos WHERE id = ?");
+    sql.run(id);
+    res.status(203).json({ message: "Deleted Successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Server Error" });
+  }
+});
 
 export default router;
