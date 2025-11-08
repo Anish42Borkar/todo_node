@@ -10,36 +10,48 @@ import db from "../db.ts";
 import generateJWToken from "../utils/generateJWToken.ts";
 
 const router = express.Router();
+import prisma from "../prismaClient.ts";
 
-router.post("/register", (req: Request<{}, {}, UserBodyT>, res: Response) => {
-  try {
-    const body = req.body;
+router.post(
+  "/register",
+  async (req: Request<{}, {}, UserBodyT>, res: Response) => {
+    try {
+      const body = req.body;
 
-    const hashedPassword = bcrypt.hashSync(body.password, 8);
-    // Register user
-    const registerUser = db.prepare(`INSERT INTO user (username,password) 
-    values (?,?)`);
+      const hashedPassword = bcrypt.hashSync(body.password, 8);
+      // Register user
+      const user = await prisma.user.create({
+        data: {
+          username: body.username,
+          password: hashedPassword,
+        },
+      });
 
-    const result = registerUser.run(body.username, hashedPassword);
+      const todo = await prisma.todo.create({
+        data: {
+          task: `Hello :) Add your first todo!`,
+          userId: user.id,
+        },
+      });
 
-    // default todo
-    const todo = `Hello :) Add your first todo!`;
+      // insertTodo.run(result.lastInsertRowid, todo);
 
-    const insertTodo = db.prepare(`INSERT INTO todos (user_id,task) 
-      VALUES (?,?)`);
+      // throw "error";
 
-    insertTodo.run(result.lastInsertRowid, todo);
+      const token = generateJWToken({ id: user.id });
+      // console.log(token);
 
-    const token = generateJWToken({ id: result.lastInsertRowid });
-    console.log(token);
-
-    res.status(200).json({ message: "Registered successfully", token: token });
-  } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Something went wrong. Please try again." });
+      res
+        .status(200)
+        .json({ message: "Registered successfully", token: "token" });
+    } catch (error) {
+      console.log(error);
+      res
+        .status(500)
+        .json({ message: "Something went wrong. Please try again." });
+    }
   }
-});
+);
 
 router.post("/login", (req: Request<{}, {}, UserBodyT>, res: Response) => {
   try {

@@ -4,12 +4,29 @@
 // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
+// $env:DATABASE_URL="postgresql://postgres:password@localhost:5432/mydb"; npx prisma generate
+
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
   output   = "../src/generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+model User {
+  id       Int    @id @default(autoincrement())
+  username String @unique
+  password String
+  todos    Todo[]
+}
+
+model Todo {
+  id       Int     @id @default(autoincrement())
+  task     String
+  copleted Boolean @default(false)
+  userId   Int?
+  user     User?   @relation(fields: [userId], references: [id])
 }
