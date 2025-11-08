@@ -4,9 +4,7 @@ import express from "express";
 import type { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import type { UserBodyT } from "../types/userType.ts";
-import jwt from "jsonwebtoken";
 
-import db from "../db.ts";
 import generateJWToken from "../utils/generateJWToken.ts";
 
 const router = express.Router();
@@ -20,30 +18,83 @@ router.post(
 
       const hashedPassword = bcrypt.hashSync(body.password, 8);
       // Register user
-      const user = await prisma.user.create({
-        data: {
-          username: body.username,
-          password: hashedPassword,
-        },
+
+      const result = await prisma.$transaction(async (tx) => {
+        const checkUserExist = await prisma.user.findUnique({
+          where: {
+            username: body.username,
+          },
+        });
+
+        if (checkUserExist) {
+          throw new Error("Username already exists");
+        }
+
+        const user = await tx.user.create({
+          data: {
+            username: body.username,
+            password: hashedPassword,
+          },
+        });
+
+        await tx.todo.create({
+          data: {
+            task: `Hello :) Add your first todo!`,
+            userId: user.id,
+          },
+        });
+
+        return user; // Return user so we can use it later
       });
 
-      const todo = await prisma.todo.create({
-        data: {
-          task: `Hello :) Add your first todo!`,
-          userId: user.id,
-        },
-      });
-
-      // insertTodo.run(result.lastInsertRowid, todo);
-
-      // throw "error";
-
-      const token = generateJWToken({ id: user.id });
-      // console.log(token);
+      const token = generateJWToken({ id: result.id });
 
       res
         .status(200)
-        .json({ message: "Registered successfully", token: "token" });
+        .json({ message: "Registered successfully", token: token });
+    } catch (error) {
+      console.log(typeof error);
+      if (error instanceof Error) {
+        if (error.message === "Username already exists") {
+          return res.status(400).json({ message: error.message });
+        }
+      }
+
+      res.status(500).json({
+        message: "Something went wrong. Please try again.",
+      });
+    }
+  }
+);
+
+router.post(
+  "/login",
+  async (req: Request<{}, {}, UserBodyT>, res: Response) => {
+    try {
+      const body = req.body;
+
+      const user = await prisma.user.findUnique({
+        where: {
+          username: body.username,
+        },
+      });
+
+      if (!user) {
+        throw new Error("User not exists");
+      }
+
+      const token = generateJWToken({ id: user.id });
+      if (!user) {
+        res.status(404).json({ message: "user not found" });
+        return;
+      }
+      const passwordValid = bcrypt.compareSync(body.password, user.password);
+      if (!passwordValid) {
+        res.status(401).json({ message: "Invalid password" });
+
+        return;
+      }
+      res.status(200).json({ message: "Login successfully", token: token });
     } catch (error) {
       console.log(error);
       res
@@ -52,31 +103,5 @@ router.post(
     }
   }
 );
-
-router.post("/login", (req: Request<{}, {}, UserBodyT>, res: Response) => {
-  try {
-    const body = req.body;
-    const user = db.prepare(`SELECT * FROM user where username = ?`) as any;
-    const userData = user.get(body.username);
-
-    const token = generateJWToken({ id: user.id });
-    if (!userData) {
-      res.status(404).json({ message: "user not found" });
-      return;
-    }
-    console.log(userData);
-    const passwordValid = bcrypt.compareSync(body.password, userData.password);
-    if (!passwordValid) {
-      res.status(401).json({ message: "Invalid password" });
-
-      return;
-    }
-    res.status(200).json({ message: "Login successfully", token: token });
-  } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Something went wrong. Please try again." });
-  }
-});
 
 export default router;
