@@ -7,9 +7,8 @@ import type { UserBodyT } from "../types/userType.ts";
 
 import generateJWToken from "../utils/generateJWToken.ts";
 
-const router = express.Router();
 import prisma from "../prismaClient.ts";
-
+const router = express.Router();
 router.post(
   "/register",
   async (req: Request<{}, {}, UserBodyT>, res: Response) => {
