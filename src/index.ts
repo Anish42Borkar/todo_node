@@ -5,12 +5,13 @@ import { fileURLToPath } from "url";
 import authRoute from "./routes/authRoutes.ts";
 import todosRouter from "./routes/todoRoutes.ts";
 import authMiddleware from "./middleware/authmiddleware.ts";
+
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const __filename = fileURLToPath(import.meta.url);
+// const __filename = __filename;
 const __dirname = dirname(__filename);
 
 app.use(express.json());

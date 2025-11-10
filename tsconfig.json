@@ -1,13 +1,14 @@
 {
   "compilerOptions": {
     "target": "ES2022", // or "ESNext"
-    "module": "NodeNext", // ✅ Key fix
-    "moduleResolution": "NodeNext", // ✅ Match with module
+    "module": "commonjs", // ✅ Key fix
+    "moduleResolution": "node", // ✅ Match with module
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "skipLibCheck": true,
     "outDir": "dist",
+    "rootDir": "./src",
     "noEmit": true,
     "allowImportingTsExtensions": true
   },
