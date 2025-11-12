@@ -11,7 +11,7 @@ CREATE TABLE "User" (
 CREATE TABLE "Todo" (
     "id" SERIAL NOT NULL,
     "task" TEXT NOT NULL,
-    "copleted" BOOLEAN NOT NULL DEFAULT false,
+    "completed" INTEGER NOT NULL DEFAULT 0,
     "userId" INTEGER,
 
     CONSTRAINT "Todo_pkey" PRIMARY KEY ("id")
